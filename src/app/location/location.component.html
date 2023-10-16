@@ -1,59 +1,18 @@
-<!-- location.component.html -->
-
-<div>
-    <h1>Location Details</h1>
-    <table>
-      <thead>
-        <tr>
-          <th>Location</th>
-          <th>Street</th>
-          <th>City</th>
-          <th>State</th>
-          <th>Country</th>
-          
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let location of locationDetails">
-          <td>{{ location.location }}</td>
-          <td>{{ location.street }}</td>
-          <td>{{ location.city }}</td>
-          <td>{{ location.state }}</td>
-          <td>{{ location.country }}</td>
-          
-        </tr>
-      </tbody>
-    </table>
+<div class="card-container">
+  <div class="panel">
+    <div>
+      <img class="sb-title-icon" src="https://fonts.gstatic.com/s/i/googlematerialicons/location_pin/v5/24px.svg" alt="">
+      <span class="sb-title">Address Selection</span>
+    </div>
+    <input type="text" placeholder="Address" id="location-input" #locationInput />
+    <input type="text" placeholder="Apt, Suite, etc (optional)" />
+    <input type="text" placeholder="City" id="locality-input" />
+    <div class="half-input-container">
+      <input type="text" class="half-input" placeholder="State/Province" id="administrative_area_level_1-input" />
+      <input type="text" class="half-input" placeholder="Zip/Postal code" id="postal_code-input" />
+    </div>
+    <input type="text" placeholder="Country" id="country-input" />
+    <button class="button-cta">Checkout</button>
   </div>
-
-
-  <div>
-    <h1>Add Location</h1>
-    
-    <form (ngSubmit)="onSubmit()">
-      <div class="form-group">
-        <label for="location">Location Name</label>
-        <input type="text" id="location" name="location" [(ngModel)]="location.location" required>
-      </div>
-      <div class="form-group">
-        <label for="streetName">Street Name</label>
-        <input type="text" id="street" name="street" [(ngModel)]="location.street" required>
-      </div>
-      <div class="form-group">
-        <label for="city">City</label>
-        <input type="text" id="city" name="city" [(ngModel)]="location.city" required>
-      </div>
-      <div class="form-group">
-        <label for="state">State</label>
-        <input type="text" id="state" name="state" [(ngModel)]="location.state" required>
-      </div>
-      <div class="form-group">
-        <label for="country">Country</label>
-        <input type="text" id="country" name="country" [(ngModel)]="location.country" required>
-      </div>
-      
-      <button type="submit">Submit</button>
-    </form>
-  </div>
-  
-  
+  <div class="map" id="gmp-map" #gmpMap></div>
+</div>
