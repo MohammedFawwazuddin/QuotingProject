@@ -1,37 +1,134 @@
-import { Component } from '@angular/core';
-import { LocationService } from 'src/services/location.service';
-import { OnInit } from '@angular/core';
-import axios from 'axios';
+import { Component, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+
 @Component({
   selector: 'app-location',
   templateUrl: './location.component.html',
   styleUrls: ['./location.component.css']
 })
-export class LocationComponent implements OnInit {
-  locationDetails: any[] = [];
-  location: any = {};
-  private apiUrl = "https://international-street.api.smarty.com/verify";
-  constructor(private locationService: LocationService) { }
-  private authID = "bbaa299a-dd4a-e323-175f-9913b057ac20";
-  private authToken = "exehWj2KjOv4Dd0Bogyw";
-  private key = "180409436444364927";
-  ngOnInit(): void {
-    this.locationService.getLocationDetails().subscribe((data) => {
-      this.locationDetails = data;
-    });
-    this.verifyLocation();
+export class LocationComponent implements AfterViewInit {
+  title(title: any) {
+    throw new Error('Method not implemented.');
   }
-  verifyLocation(): void {
-    axios.get(this.apiUrl, { params: { "key": this.key } }).then(response => console.log(response.data))
-  }
-  onSubmit() {
-    this.locationService.addLocation(this.location).subscribe(
-      (data) => {
+  @ViewChild('gmpMap') gmpMap: ElementRef | any;
+  @ViewChild('locationInput') locationInput: ElementRef | any;
 
-        console.log('Location added successfully:', data);
-        this.location = {};
+  ngAfterViewInit() {
+    this.initMap();
+  }
+
+  initMap() {
+    const CONFIGURATION = {
+      ctaTitle: 'Checkout',
+      mapOptions: {
+        center: { lat: 37.4221, lng: -122.0841 },
+        fullscreenControl: true,
+        mapTypeControl: false,
+        streetViewControl: true,
+        zoom: 11,
+        zoomControl: true,
+        maxZoom: 22,
+        mapId: ''
       },
+      mapsApiKey: 'AIzaSyDvZkqm5AocfLgLooG-qTI4xdARnXPYNwc',
+      capabilities: {
+        addressAutocompleteControl: true,
+        mapDisplayControl: true,
+        ctaControl: true
+      }
+    };
 
-    );
+    const componentForm: { [key: string]: string } = {
+      street_number: 'short_name',
+      route: 'long_name',
+      locality: 'long_name',
+      administrative_area_level_1: 'short_name',
+      country: 'long_name',
+      postal_code: 'short_name',
+    };
+
+    const getFormInputElement = (component: string) =>
+      document.getElementById(component + '-input') as HTMLInputElement;
+
+    const map = new google.maps.Map(this.gmpMap.nativeElement, {
+      zoom: CONFIGURATION.mapOptions.zoom,
+      center: CONFIGURATION.mapOptions.center,
+      mapTypeControl: false,
+      fullscreenControl: CONFIGURATION.mapOptions.fullscreenControl,
+      zoomControl: CONFIGURATION.mapOptions.zoomControl,
+      streetViewControl: CONFIGURATION.mapOptions.streetViewControl,
+    });
+
+    const marker = new google.maps.Marker({ map, draggable: false });
+    const autocompleteInput = this.locationInput.nativeElement as HTMLInputElement;
+
+    if (autocompleteInput) {
+      const autocomplete = new google.maps.places.Autocomplete(autocompleteInput, {
+        fields: ['address_components', 'geometry', 'name'],
+        types: ['address'],
+      });
+
+      autocomplete.addListener('place_changed', () => {
+        marker.setVisible(false);
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          this.renderAddress(place);
+          this.fillInAddress(place);
+        } else {
+          window.alert(`No details available for input: '${place.name}'`);
+        }
+      });
+    }
+  }
+
+  fillInAddress(place: google.maps.places.PlaceResult) {
+    const addressNameFormat = {
+      street_number: 'short_name',
+      route: 'long_name',
+      locality: 'long_name',
+      administrative_area_level_1: 'short_name',
+      country: 'long_name',
+      postal_code: 'short_name',
+    };
+
+    for (const type in addressNameFormat) {
+      if (addressNameFormat.hasOwnProperty(type)) {
+        const component = addressNameFormat[type as keyof typeof addressNameFormat];
+        const value = this.getAddressComponentValue(place.address_components || [], type);
+        const inputElement = this.getFormInputElement(type);
+        if (inputElement) {
+          inputElement.value = value;
+        }
+      }
+    }
+  }
+
+  getAddressComponentValue(
+    components: google.maps.GeocoderAddressComponent[], 
+    type: string
+  ): string {
+    const addressNameFormat: { [key: string]: string } = {
+      street_number: 'short_name',
+      route: 'long_name',
+      locality: 'long_name',
+      administrative_area_level_1: 'short_name',
+      country: 'long_name',
+      postal_code: 'short_name',
+    };
+  
+    const component = components.find((c) => c.types.includes(type));
+    return component ? addressNameFormat[type] : '';
+  }
+  
+
+  renderAddress(place: google.maps.places.PlaceResult) {
+    const map = new google.maps.Map(this.gmpMap.nativeElement);
+    const marker = new google.maps.Marker({
+      map,
+      position: place.geometry?.location,
+    });
+  }
+
+  private getFormInputElement(component: string): HTMLInputElement | null {
+    return document.getElementById(component + '-input') as HTMLInputElement | null;
   }
 }
